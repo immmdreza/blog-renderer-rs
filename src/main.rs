@@ -8,6 +8,9 @@ use serde_json::json;
 use walkdir::WalkDir;
 
 fn main() -> Result<(), Box<dyn error::Error>> {
+    // Replace with Some(url) for prod or leave None for local dev.
+    let website_url: Option<PathBuf> = None;
+
     let mut registry = Handlebars::new();
 
     registry.register_template_file("layout", "templates/layout.html.hbs")?;
@@ -15,9 +18,11 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let input = Path::new("pages");
     let output = Path::new("build");
 
-    let html_base = env::current_dir().unwrap().join(output);
+    let html_base = website_url.unwrap_or_else(|| env::current_dir().unwrap().join(output));
 
-    fs::remove_dir_all(output)?;
+    if output.exists() {
+        fs::remove_dir_all(output)?;
+    }
 
     for entry in WalkDir::new(input).into_iter().filter_map(|e| e.ok()) {
         println!("{}", entry.path().display());
